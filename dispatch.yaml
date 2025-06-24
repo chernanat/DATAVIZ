@@ -1,0 +1,3 @@
+dispatch:
+  - url: "datavizapi.glocation.co/*"
+    service: api

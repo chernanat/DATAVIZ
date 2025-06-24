@@ -1,0 +1,991 @@
+
+  openapi: 3.0.1
+  info:
+    title: DataViz - Servicios de Usuario
+    description: API para CRUD.
+    version: 1.1.0
+    contact:
+      email: wilson@glocation.com.co
+  tags:
+    - name: Graphics
+      description: Operaciones con las gráficas
+  servers:
+    - url: 'https://us-central1-glocation-dataviz.cloudfunctions.net/'
+      description: Servidor de Producción
+  paths:
+    /datavizCreateGraphic:
+      post:
+        description: >-
+          Crea un gráfico en la base de datos Firestore para visualizar su
+          gráfico, tabla y mapa si se desea y cuenta con los datos.
+        tags:
+          - Graphics
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - titulo
+                  - tipo
+                  - descripcion
+                  - token
+                properties:
+                  token:
+                    type: string
+                    description: >-
+                      Token de autorizacion facilitado por el super
+                      Administrador.
+                    example: bca649f805f1c7475ds2d89c4e140d7c
+                  titulo:
+                    type: string
+                    description: Título del gráfico (debe ser único).
+                    example: Caídas de red por tecnología
+                  descripcion:
+                    type: string
+                    description: Descripción del gráfico.
+                    example: >-
+                      Aca se puede visualizar las caídas a lo largo del tiempo
+                      de las diferentes estaciones en sus respectivas
+                      tecnologías.
+                  tipo:
+                    type: string
+                    description: >
+                      Tipo de gráfico. 
+
+
+                      Los gráficos "barras verticales", "barras horizontales",
+                      "pie", "dona", "treemap", "tarjeta", "linea", "area" y
+                      "gauge" solo necesitan una dimensión y una medición. 
+
+
+                      Los demás requieren "dimension" (eje X) y "dimension2"
+                      (categorías).
+
+
+                      Los gráficos de línea y area pueden tener dos (2)
+                      dimensiones
+
+
+                      El gráfico de calendario necesita que su "dimension" (eje
+                      x) sean fechas para funcionar.
+                    enum:
+                      - barras verticales
+                      - barras horizontales
+                      - pie
+                      - dona
+                      - linea
+                      - area
+                      - barras apiladas
+                      - treemap
+                      - tarjeta
+                      - gauge
+                      - calendario
+                      - de velas
+                      - radar
+                  logo:
+                    type: string
+                    description: Url del logo de la empresa o del cliente.
+                    example: >-
+                      https://upload.wikimedia.org/wikipedia/commons/f/f1/Samsung_logo_blue.png
+                  tipoAgregacion:
+                    type: string
+                    description: >-
+                      Se refiere a qué operación matemática, se desea realizar
+                      con el valor de medición para mostrar en el gráfico, ya
+                      sea una suma o el promedio de los datos por categoría.
+                    enum:
+                      - suma
+                      - promedio
+                  filtrosActivos:
+                    type: boolean
+                    description: >-
+                      Hace referencia a si se desea tener los filtros activos o
+                      desactivados para el gráfico, mapa y tabla.
+                    enum:
+                      - true
+                      - false
+                  filtros:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      Si se desea filtrar por alguna propiedad, debe estar
+                      escrito igual que en los datos.
+                    example:
+                      - Tecnología
+                  filtrosLabel:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      Etiquetas o nombres de los filtros, deben tener el mismo
+                      numero de filtros que se hayan agregado.
+                    example:
+                      - Tecnologías
+                  propiedades:
+                    type: object
+                    description: Propiedades adicionales del gráfico y estilos.
+                    required:
+                      - dimension
+                      - medicion
+                      - urlData
+                    properties:
+                      urlData:
+                        type: string
+                        description: URL de los datos.
+                        example: >-
+                          https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-4
+                      dimension:
+                        type: string
+                        description: >-
+                          Dimensión o eje X del gráfico, debe ser una propiedad
+                          cualitativa, si es para gráficos de 2 dimensiones
+                          puede ser una dimension que contenga fechas (nombre
+                          exacto de la propiedad en los datos).
+                        example: fecha
+                      medicion:
+                        type: string
+                        description: >-
+                          la medición o eje y del gráfico, debe ser una
+                          propiedad cuantitativa, ya que con esta medición se
+                          sacara el promedio o suma para la creación del gráfico
+                          (nombre exacto de la propiedad en los datos).
+                        example: Conteo
+                      dimension2:
+                        type: string
+                        description: >-
+                          Dimensión 2 o categoría para gráficos específicos,
+                          debe ser una propiedad cualitativa (ej. barras
+                          apiladas, área, etc.).
+                        example: Tecnologia
+                      legend:
+                        type: boolean
+                        description: >-
+                          Hace referencia a si se quiere tener activas las
+                          leyendas en los gráficos.
+                        enum:
+                          - true
+                          - false
+                      legendPosition:
+                        type: string
+                        description: >-
+                          Hace referencia a la posicion de las leyendas si estan
+                          activas en el gráfico.
+                        enum:
+                          - top
+                          - bottom
+                          - left
+                          - right
+                      dataLabels:
+                        type: boolean
+                        description: >-
+                          Hace referencia a si se desean visualizar encima del
+                          gráfico los datos numericos.
+                        enum:
+                          - true
+                          - false
+                      compartible:
+                        type: boolean
+                        description: Indica si el gráfico es compartible.
+                        enum:
+                          - true
+                          - false
+                      descargable:
+                        type: boolean
+                        description: Indica si el gráfico es descargable.
+                        enum:
+                          - true
+                          - false
+                      estilo:
+                        type: object
+                        description: Estilo del gráfico.
+                        properties:
+                          color_fuente:
+                            type: string
+                            description: Color del texto en la página.
+                            default: 'rgba(54, 162, 235, 1)'
+                          colors:
+                            type: array
+                            description: >-
+                              Colores del gráfico, es importante que se pasen
+                              los colores necesarios para cada categoria que
+                              este en la dimension.
+                            example:
+                              - '#ffd60a'
+                              - '#0096c7'
+                              - '#a7c957'
+                              - '#ff6b35'
+                              - '#8338ec'
+                              - '#ff6b35'
+                          fuente:
+                            type: string
+                            description: Tipo de fuente del texto.
+                            default: Arial
+                            example: 'Arial, times new roman, tormenta, georgia'
+                      label_dimension:
+                        type: string
+                        description: Etiqueta de la dimensión.
+                        example: Tecnologias
+                      label_medicion:
+                        type: string
+                        description: Etiqueta de la medición.
+                        example: total
+                      dimensionSelected:
+                        type: string
+                        description: >-
+                          si el gráfico es tipo gauge, debes escoger una
+                          categoría específica de tu dimensión para calcular su
+                          valor en relación al total de la dimensión.
+                        example: 4g
+                  propiedadesMapa:
+                    type: object
+                    description: >-
+                      Propiedades específicas para la creación del mapa, ya sea
+                      coropleta o de burbujas, también se agregara nivel de zoom
+                      inicial, latitud inicial y longitud inicial donde se
+                      iniciara la vista del mapa.
+                    properties:
+                      mapa:
+                        type: boolean
+                        default: false
+                        description: Indica si se desea generar un mapa.
+                        enum:
+                          - true
+                          - false
+                      tipo_mapa:
+                        type: string
+                        description: >-
+                          Tipo de mapa. Si es de coropleta requiere `id_geo` y
+                          urlMapa. Si es de burbujas requiere `lat`, `lon`, y
+                          `size`.
+                        enum:
+                          - coropleta
+                          - burbujas
+                      urlMapa:
+                        type: string
+                        description: URL del mapa. Requerida si tipo_mapa es 1.
+                        example: >-
+                          https://storage.googleapis.com/images-server-dataviz/mpios.json
+                      id_geo:
+                        type: string
+                        description: >-
+                          Identificador geográfico asociado al mapa que esta en
+                          urlData.
+                        example: municipios
+                      keyGeo:
+                        type: string
+                        description: >-
+                          Identificador geográfico asociado al mapa que esta en
+                          urlMapa.
+                        example: mpio_cdpmp
+                      lat:
+                        type: string
+                        description: >-
+                          Latitud para mapas de burbujas (nombre exacto en los
+                          datos).
+                        example: LATITUD
+                      lon:
+                        type: string
+                        description: >-
+                          Longitud para mapas de burbujas (nombre exacto en los
+                          datos).
+                        example: LONGITUD
+                      size:
+                        type: string
+                        description: >-
+                          Tamaño para mapas de burbujas (nombre exacto en los
+                          datos).
+                        example: Total
+                      latitudInicial:
+                        type: number
+                        description: >-
+                          Latitud inicial de la vista con la que se verá el
+                          mapa.
+                        example: 4.60971
+                      longitudInicial:
+                        type: number
+                        description: >-
+                          Longitud inicial de la vista con la que se verá el
+                          mapa.
+                        example: -74.08175
+                      zoom:
+                        type: number
+                        description: Nivel de zoom inicial del mapa.
+                        example: 8
+        responses:
+          '200':
+            description: Gráfico creado correctamente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Gráfico creado correctamente
+                    url:
+                      type: string
+                      example: https://charts-dot-glocation-dataviz.uc.r.appspot.com/?id=123abc
+          '400':
+            description: Error en la solicitud.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: >-
+                        Los siguientes campos son requeridos: titulo,
+                        descripci
+          '401':
+            description: Error de autenticación.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AuthError'
+                examples:
+                  missingToken:
+                    $ref: '#/components/examples/MissingToken'
+                  invalidToken:
+                    $ref: '#/components/examples/InvalidToken'
+          '500':
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Error interno del servidor
+    /datavizEditGraphic:
+      post:
+        description: >-
+          Permite editar un gráfico existente. Se requiere solo el ID y se le
+          puede actualizar cualquier parámetro. Es importante pasar al menos un
+          parámetro a actualizar, pero todos son opcionales. Esto no afectará a
+          los otros datos que ya estén guardados en este gráfico.
+        tags:
+          - Graphics
+        parameters:
+          - name: id
+            in: query
+            required: true
+            description: ID del gráfico que se desea editar.
+            example: 381HYagy8ncCliudAAxl
+            schema:
+              type: string
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                properties:
+                  token:
+                    type: string
+                    description: >-
+                      Token de autorización facilitado por el super
+                      Administrador.
+                    example: bca649f805f1c7475ds2d89c4e140d7c
+                  titulo:
+                    type: string
+                    description: Título del gráfico (debe ser único).
+                    example: nuevo título gráfico 2.0
+                  descripcion:
+                    type: string
+                    description: Descripción del gráfico..
+                    example: nueva descripción para un gráfico específico
+                  tipo:
+                    type: string
+                    description: Si se desea actualizar con un nuevo tipo de gráfico.
+                    enum:
+                      - barras verticales
+                      - barras horizontales
+                      - pie
+                      - dona
+                      - linea
+                      - area
+                      - barras apiladas
+                      - treemap
+                      - tarjeta
+                      - gauge
+                      - calendario
+                      - de velas
+                      - radar
+                  logo:
+                    type: string
+                    description: Url del logo de la empresa o del cliente.
+                    example: >-
+                      https://upload.wikimedia.org/wikipedia/commons/f/f1/Samsung_logo_blue.png
+                  tipoAgregacion:
+                    type: string
+                    description: >-
+                      Se refiere a qué operación matemática, se desea realizar
+                      con el valor de medición para mostrar en el gráfico, ya
+                      sea una suma o el promedio de los datos por categoría.
+                    enum:
+                      - suma
+                      - promedio
+                  filtrosActivos:
+                    type: boolean
+                    description: >-
+                      Hace referencia a si se desea tener los filtros activos o
+                      desactivados para el gráfico, mapa y tabla.
+                    enum:
+                      - true
+                      - false
+                  newFilters:
+                    type: string
+                    description: >-
+                      Si newFilters es 'delete', se eliminan todos los filtros.
+                      Si newFilters es 'true', se sobrescriben los filtros con
+                      los nuevos valores proporcionados.Si newFilters es
+                      'false', se agregan nuevos filtros sin eliminar los
+                      existentes.
+                    enum:
+                      - 'false'
+                      - 'true'
+                      - delete
+                  filtros:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      Si se desea filtrar por alguna propiedad, debe estar
+                      escrito igual que en los datos.
+                    example:
+                      - Tecnología
+                  filtrosLabel:
+                    type: array
+                    items:
+                      type: string
+                    description: >-
+                      Etiquetas o nombres de los filtros, deben tener el mismo
+                      numero de filtros que se hayan agregado.
+                    example:
+                      - Tecnologías
+                  propiedades:
+                    type: object
+                    description: Objeto que contiene propiedades adicionales del gráfico.
+                    properties:
+                      urlData:
+                        type: string
+                        description: >-
+                          URL desde la cual se pueden obtener los datos que
+                          servirán para crear el gráfico.
+                        example: 'https://example.com/data.json'
+                      medicion:
+                        type: string
+                        description: >-
+                          Especificar la medición cuantitativa para crear el
+                          gráfico.
+                        example: Total
+                      dimension:
+                        type: string
+                        description: Especifica la dimensión principal del gráfico.
+                        example: Causa_afectacion
+                      dimension2:
+                        type: string
+                        description: >-
+                          Especifica una segunda dimensión del gráfico, si
+                          aplica.
+                        example: Alarmas
+                      legend:
+                        type: boolean
+                        description: >-
+                          Hace referencia a si se quiere tener activas las
+                          leyendas en los gráficos.
+                        enum:
+                          - true
+                          - false
+                      legendPosition:
+                        type: string
+                        description: >-
+                          Hace referencia a la posicion de las leyendas si estan
+                          activas en el gráfico.
+                        enum:
+                          - top
+                          - bottom
+                          - left
+                          - right
+                      dataLabels:
+                        type: boolean
+                        description: >-
+                          Hace referencia a si se desean visualizar encima del
+                          gráfico los datos numericos.
+                        enum:
+                          - true
+                          - false
+                      compartible:
+                        type: boolean
+                        description: Indica si el gráfico puede ser compartido.
+                        enum:
+                          - true
+                          - false
+                      descargable:
+                        type: boolean
+                        description: Indica si el gráfico puede ser descargado.
+                        enum:
+                          - true
+                          - false
+                      estilo:
+                        type: object
+                        description: Objeto que define el estilo visual del gráfico.
+                        properties:
+                          color_fuente:
+                            type: string
+                            description: >-
+                              Define el color del texto del título y descripción
+                              en formato hexadecimal o RGBA.
+                            example: '#0096c7'
+                          colors:
+                            type: array
+                            items:
+                              type: string
+                            description: >-
+                              Lista de colores para el gráfico en formato
+                              hexadecimal o RGBA.
+                            example:
+                              - '#ffd60a'
+                              - '#a7c957'
+                              - '#0096c7'
+                              - '#ff6b35'
+                          fuente:
+                            type: string
+                            description: Especifica la fuente tipográfica.
+                            example: Arial
+                      label_dimension:
+                        type: string
+                        description: >-
+                          Etiqueta que describe la dimensión principal del
+                          gráfico.
+                        example: causas de afectación
+                      label_medicion:
+                        type: string
+                        description: >-
+                          Etiqueta que describe la medición utilizada en el
+                          gráfico.
+                        example: totalidad
+                      dimensionSelected:
+                        type: string
+                        description: >-
+                          si el gráfico es tipo gauge, debes escoger una
+                          categoría específica de tu dimensión para calcular su
+                          valor en relación al total de la dimensión.
+                        example: otros
+                  propiedadesMapa:
+                    type: object
+                    description: Propiedades específicas para la creación del mapa.
+                    properties:
+                      mapa:
+                        type: boolean
+                        default: false
+                        description: Indica si se desea generar un mapa.
+                      tipo_mapa:
+                        type: string
+                        description: Tipo de mapa. Requerido si `mapa` es true.
+                        enum:
+                          - coropleta
+                          - burbujas
+                      urlMapa:
+                        type: string
+                        description: URL del mapa para representar datos geoespaciales.
+                        example: 'https://example.com/map.json'
+                      id_geo:
+                        type: string
+                        description: ID geográfico para datos de mapas.
+                        example: codigo_municipio
+                      keyGeo:
+                        type: string
+                        description: >-
+                          Identificador geográfico asociado al mapa que esta en
+                          urlMapa.
+                        example: mpio_cdpmp
+                      lat:
+                        type: string
+                        description: Latitud para mapas de burbujas.
+                        example: LATITUD
+                      lon:
+                        type: string
+                        description: Longitud para mapas de burbujas.
+                        example: LONGITUD
+                      size:
+                        type: string
+                        description: Tamaño para mapas de burbujas.
+                        example: Total
+                      latitudInicial:
+                        type: number
+                        description: Latitud inicial de la vista del mapa.
+                        example: 4.570868
+                      longitudInicial:
+                        type: number
+                        description: Longitud inicial de la vista del mapa.
+                        example: -74.297333
+                      zoom:
+                        type: number
+                        description: Nivel de zoom inicial del mapa.
+                        example: 8
+        responses:
+          '200':
+            description: Gráfico actualizado correctamente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                    url:
+                      type: string
+                      example: charts-dot-glocation-dataviz.uc.r.appspot.com/?id=VNkr5LV2W7mb77UzJ9gE
+                    data:
+                      type: object
+          '203':
+            description: No se pasó ningún parámetro para actualizar el gráfico.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+          '400':
+            description: Error de validación de datos.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+          '401':
+            description: Error de autenticación.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AuthError'
+                examples:
+                  missingToken:
+                    $ref: '#/components/examples/MissingToken'
+                  invalidToken:
+                    $ref: '#/components/examples/InvalidToken'
+          '404':
+            description: Gráfico no encontrado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+          '500':
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+    /datavizDeleteGraphic:
+      post:
+        summary: Eliminar un gráfico
+        description: >-
+          Elimina un gráfico especificado por el ID, autenticado por un token de
+          seguridad.
+        operationId: deleteGrafic
+        tags:
+          - Graphics
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: >-
+                      Token de seguridad administrado por el super
+                      administrador.
+                    example: bca649f805f1c7475ds2d89c4e140d7c
+        parameters:
+          - name: id
+            in: query
+            description: ID del gráfico a eliminar.
+            required: true
+            schema:
+              type: string
+              example: YRBbRUZYmlN58qXaWHIj
+        responses:
+          '200':
+            description: Gráfico eliminado correctamente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Gráfico eliminado correctamente.
+          '400':
+            description: Error en la solicitud debido a un campo faltante o inválido.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: El campo 'token' es requerido.
+          '401':
+            description: Error de autenticación debido a un token inválido.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: 'Acceso denegado: token inválido.'
+          '404':
+            description: No se encontró el gráfico con el ID proporcionado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Gráfico no encontrado.
+          '500':
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Error interno del servidor.
+    /datavizShareGraphic:
+      get:
+        summary: Obtener el código embebido de un gráfico
+        description: >-
+          Devuelve un código HTML de tipo `<iframe>` para embeber un gráfico en
+          otra página.
+        tags:
+          - Graphics
+        parameters:
+          - name: id
+            in: query
+            required: true
+            schema:
+              type: string
+              description: ID del gráfico que se desea compartir.
+        responses:
+          '200':
+            description: Código embebido generado exitosamente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    embedCode:
+                      type: string
+                      example: >-
+                        <iframe src='https://example.com/gráfico' loading='lazy'
+                        style='width: 100%; height: 600px; border: 0px none;'
+                        allow='web-share; clipboard-write'></iframe>
+          '400':
+            description: Error de validación en los datos.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: 'Los siguientes campos son requeridos: id'
+          '404':
+            description: Gráfico no encontrado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Gráfico no encontrado.
+          '500':
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Error interno del servidor
+    /datavizGetGraphic:
+      get:
+        summary: Obtener los datos de un gráfico
+        description: >-
+          Devuelve los datos de un gráfico especificado por su ID en formato
+          JSON ! servicio getGrafic.
+        tags:
+          - Graphics
+        parameters:
+          - name: id
+            in: query
+            required: true
+            schema:
+              type: string
+            description: ID del gráfico que se desea obtener.
+        responses:
+          '200':
+            description: Datos del gráfico obtenidos correctamente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    idDashboard:
+                      type: string
+                      example: '1234'
+                    titulo:
+                      type: string
+                      example: Gráfico de Ejemplo
+                    descripcion:
+                      type: string
+                      example: Este es un gráfico de ejemplo.
+                    metadata:
+                      type: object
+                      example:
+                        key: value
+                    fuente:
+                      type: string
+                      example: Fuente de los datos
+                    propiedades:
+                      type: object
+                      example:
+                        urlData: 'https://example.com/data'
+                        compartible: true
+                        descargable: true
+                        fullScreen: true
+                        filtros: true
+                        mapa: true
+                        variable: Variable Ejemplo
+                        mostrar: true
+                        tamaño: true
+                        leyenda: true
+                        estilo: true
+          '500':
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Error interno del servidor
+    /datavizGenerateCsvGraphic:
+      get:
+        summary: Generar CSV de un gráfico
+        description: >-
+          Genera un archivo CSV con los datos de un servicio guardado en el
+          campo urlData.
+        tags:
+          - Graphics
+        parameters:
+          - in: query
+            name: id
+            required: true
+            schema:
+              type: string
+            description: El ID del gráfico que se desea convertir a CSV.
+        responses:
+          '200':
+            description: CSV generado correctamente.
+            content:
+              text/csv:
+                schema:
+                  type: string
+                  example: >-
+                    este genera la descarga de un archivo excel con losunos
+                    datos de un servicio que aparecen en urlData
+          '400':
+            description: Error en validacion.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: 'Los siguientes campos son requeridos: id'
+          '404':
+            description: El gráfico no fue encontrado en la colección.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Gráfico no encontrado.
+          '500':
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Error interno del servidor
+  components:
+    schemas:
+      AuthError:
+        type: object
+        properties:
+          success:
+            type: boolean
+          message:
+            type: string
+        required:
+          - success
+          - message
+      InternalServerError:
+        type: object
+        properties:
+          success:
+            type: boolean
+            example: false
+          error:
+            type: string
+            example: Error interno del servidor
+    examples:
+      MissingToken:
+        value:
+          success: false
+          message: Token de autorización faltante o inválido
+      InvalidToken:
+        value:
+          success: false
+          message: Token inválido
+      InternalServerError:
+        value:
+          success: false
+          error: >-
+            Se produjo un error interno en el servidor. Inténtalo de nuevo más
+            tarde.
