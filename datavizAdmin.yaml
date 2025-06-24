@@ -1,586 +1,482 @@
-  openapi: 3.0.1
-  info:
-    title: DataViz - Servicios de Admin
-    description: API para CRUD.
-    version: 1.0.0
-    contact:
-      email: wilson@glocation.com.co
-  tags:
-    - name: Token
-      description: Genera los tokens de para cada servicio
-    - name: Auth
-      description: Operaciones de autenticación
-  servers:
-    - url: 'https://us-central1-glocation-dataviz.cloudfunctions.net/'
-      description: Servidor de Producción
-  paths:
-    /generateAdminTokenDatavizIsolated:
-      post:
-        tags:
-          - Token
-        summary: >-
-          Generar un token para un administrador y enviarlo por correo
-          electrónico.
-        description: >-
-          Permite generar un token único para un correo electrónico y enviarlo
-          por correo con un mensaje de bienvenida.
-        security:
-          - bearerAuth: []
-        operationId: generateAdminToken
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  email:
-                    type: string
-                    description: >-
-                      El correo electrónico del usuario al que se le otorgará
-                      permisos de administrador.
-                    example: usuario@example.com
-        responses:
-          '200':
-            description: Token generado y correo enviado exitosamente.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: Token generado y correo enviado exitosamente
-                    token:
-                      type: string
-                      description: El token generado para el usuario.
-                      example: a9f7e84d7a9d7cfea5d82e70cf7880b8
-          '400':
-            description: >-
-              Error de solicitud, falta el campo 'email' o el correo ya está
-              registrado.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: 'El campo ''email'' para el usuario, es requerido'
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: Error interno del servidor
-    /datavizCreateUser:
-      post:
-        description: >-
-          Crea un usuario en el sistema y envía un correo de confirmación si la
-          operación es exitosa.
-        tags:
-          - Auth
-        security:
-          - bearerAuth: []
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  nombre:
-                    type: string
-                    example: Juan
-                    description: Nombre del usuario a crear.
-                  apellido:
-                    type: string
-                    example: Pérez
-                    description: Apellido del usuario a crear.
-                  correo:
-                    type: string
-                    format: email
-                    example: juan.perez@example.com
-                    description: Correo electrónico del usuario a crear.
-                  rol:
-                    type: integer
-                    enum:
-                      - 2
-                      - 3
-                      - 4
-                    description: >-
-                      Rol del usuario a crear. Depende del rol del usuario que
-                      realiza la operación.
-        responses:
-          '200':
-            description: Usuario creado exitosamente.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: >-
-                        Usuario creado correctamente, se te ha enviado un mail
-                        de confirmación
-                    userId:
-                      type: string
-                      example: e8c47f57-567d-4b89-8e2e-dcdafcdd7aa5
-          '201':
-            description: El correo ya está registrado.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: >-
-                        El correo ya está registrado, inicia sesión o si
-                        olvidaste tu contraseña recupérala
-          '400':
-            description: Error en los datos proporcionados.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: El idUser es obligatorio
-          '401':
-            description: Error de autenticación.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/AuthError'
-                examples:
-                  missingToken:
-                    $ref: '#/components/examples/MissingToken'
-                  invalidToken:
-                    $ref: '#/components/examples/InvalidToken'
-          '403':
-            description: El usuario no tiene permisos para realizar esta operación.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: >-
-                        No tienes permisos para crear este tipo de usuario (solo
-                        roles 3 y 4 permitidos)
-          '404':
-            description: El usuario que intenta crear otros usuarios no existe.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: El usuario que intenta crear usuarios no existe
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/InternalServerError'
-                examples:
-                  internalError:
-                    $ref: '#/components/examples/InternalServerError'
-    /https://datavizgeturlbyemail-572283917804.us-central1.run.app:
-      get:
-        description: >-
-          Obtiene el listado de los visores creados por un usuario en base al email.
-        tags:
-          - Visor
-        security:
-          - bearerAuth: []
-        responses:
-          '200':
-            description: Usuario creado exitosamente.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    status:
-                      type: string
-                      example: success
-                    document_urls:
-                      type: array
-                      items:
-                        type: string
-                      example: ["url1", "url2"]
+openapi: 3.0.1
+info:
+  title: DataViz - Servicios de Admin
+  description: API para CRUD.
+  version: 1.0.0
+  contact:
+    email: wilson@glocation.com.co
+tags:
+  - name: Token
+    description: Genera los tokens de para cada servicio
+  - name: Auth
+    description: Operaciones de autenticación
+servers:
+  - url: 'https://us-central1-glocation-dataviz.cloudfunctions.net/'
+    description: Servidor de Producción
+paths:
+  /generateAdminTokenDatavizIsolated:
+    post:
+      tags:
+        - Token
+      summary: Generar un token para un administrador y enviarlo por correo electrónico.
+      description: |
+        Permite generar un token único para un correo electrónico y enviarlo por correo con un mensaje de bienvenida.
 
-          '204':
-            description: El usuario aun no tiene graficos creados.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    status:
-                      type: string
-                      example: >-
-                        success
-                    message:
-                      type: string
-                      example: >-
-                        El email no tiene graficos creados
-                    document_urls:
-                      type: array
-                      items:
-                        type: string
-                      example: []
-
-          '400':
-            description: Error en los datos proporcionados.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: El email es obligatorio
-          '401':
-            description: Error de autenticación.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/AuthError'
-                examples:
-                  missingToken:
-                    $ref: '#/components/examples/MissingToken'
-                  invalidToken:
-                    $ref: '#/components/examples/InvalidToken'
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/InternalServerError'
-                examples:
-                  internalError:
-                    $ref: '#/components/examples/InternalServerError'
-    
-    /datavizUpdateUser:
-      post:
-        description: >-
-          Actualiza los datos de un usuario existente en la base de datos.
-          Requiere el correo del usuario como identificador obligatorio.
-        tags:
-          - Auth
-        security:
-          - bearerAuth: []
-        parameters:
-          - name: id
-            in: query
-            required: true
+        **Nota:** Este endpoint no requiere autenticación previa.
+      operationId: generateAdminToken
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: string
-            description: ID del usuario que se desea actualizar.
-            example: 676tgd1-cc3456a-465fb-fds505-6a245a309e12
-        requestBody:
-          required: true
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: El correo electrónico del usuario al que se le otorgará permisos de administrador.
+                  example: usuario@example.com
+      responses:
+        '200':
+          description: Token generado y correo enviado exitosamente.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  correo:
+                  message:
                     type: string
-                    format: email
-                    example: juan.perez@example.com
-                    description: >-
-                      Correo del usuario que se desea actualizar.
-                      **Obligatorio**.
-                  nombre:
+                    example: Token generado y correo enviado exitosamente
+                  token:
                     type: string
-                    example: Juan
-                    description: >-
-                      Nuevo nombre del usuario. Solo se actualiza si es
-                      diferente del actual.
-                  apellido:
+                    description: El token generado para el usuario.
+                    example: a9f7e84d7a9d7cfea5d82e70cf7880b8
+        '400':
+          description: >-
+            Error de solicitud, falta el campo 'email' o el correo ya está
+            registrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
                     type: string
-                    example: Pérez
-                    description: >-
-                      Nuevo apellido del usuario. Solo se actualiza si es
-                      diferente del actual.
-                  password:
+                    example: 'El campo ''email'' para el usuario, es requerido'
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
                     type: string
-                    example: nueva_contraseña
-                    description: >-
-                      Nueva contraseña del usuario. Solo se actualiza si es
-                      diferente de la actual.
-        responses:
-          '200':
-            description: Usuario actualizado exitosamente.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: Usuario actualizado correctamente
-          '400':
-            description: >-
-              Solicitud incorrecta. Por ejemplo, falta el correo o no hay
-              cambios en los datos del usuario.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example:
-                        missingCorreo:
-                          value: >-
-                            El correo del usuario que se desea editar es
-                            obligatorio
-                        noChanges:
-                          value: No se detectaron cambios en los datos del usuario
-          '401':
-            description: Error de autenticación.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/AuthError'
-                examples:
-                  missingToken:
-                    $ref: '#/components/examples/MissingToken'
-                  invalidToken:
-                    $ref: '#/components/examples/InvalidToken'
-          '404':
-            description: Usuario no encontrado.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: El usuario que intenta ser editado no existe
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/InternalServerError'
-                examples:
-                  internalError:
-                    $ref: '#/components/examples/InternalServerError'
-    /datavizDeleteUser:
-      delete:
-        description: >-
-          Solo los usuarios con rol de administrador pueden realizar esta
-          operación.
-        tags:
-          - Auth
-        security:
-          - bearerAuth: []
-        parameters:
-          - name: id
-            in: query
-            required: true
+                    example: Error interno del servidor
+  /datavizCreateUser:
+    post:
+      description: >-
+        Crea un usuario en el sistema y envía un correo de confirmación si la
+        operación es exitosa.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: string
-            description: ID del usuario que se desea eliminar.
-            example: 676tgd1-cc3456a-465fb-fds505-6a245a309e12
-        responses:
-          '200':
-            description: Usuario eliminado exitosamente.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  example: Juan
+                  description: Nombre del usuario a crear.
+                apellido:
+                  type: string
+                  example: Pérez
+                  description: Apellido del usuario a crear.
+                correo:
+                  type: string
+                  format: email
+                  example: juan.perez@example.com
+                  description: Correo electrónico del usuario a crear.
+                rol:
+                  type: integer
+                  enum:
+                    - 2
+                    - 3
+                    - 4
+                  description: >-
+                    Rol del usuario a crear. Depende del rol del usuario que
+                    realiza la operación.
+      responses:
+        '200':
+          description: Usuario creado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: >-
+                      Usuario creado correctamente, se te ha enviado un mail
+                      de confirmación
+                  userId:
+                    type: string
+                    example: e8c47f57-567d-4b89-8e2e-dcdafcdd7aa5
+        '201':
+          description: El correo ya está registrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: >-
+                      El correo ya está registrado, inicia sesión o si
+                      olvidaste tu contraseña recupérala
+        '400':
+          description: Error en los datos proporcionados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El idUser es obligatorio
+        '401':
+          description: Error de autenticación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                missingToken:
+                  $ref: '#/components/examples/MissingToken'
+                invalidToken:
+                  $ref: '#/components/examples/InvalidToken'
+        '403':
+          description: El usuario no tiene permisos para realizar esta operación.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: >-
+                      No tienes permisos para crear este tipo de usuario (solo
+                      roles 3 y 4 permitidos)
+        '404':
+          description: El usuario que intenta crear otros usuarios no existe.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El usuario que intenta crear usuarios no existe
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+              examples:
+                internalError:
+                  $ref: '#/components/examples/InternalServerError'
+  /https://datavizgeturlbyemail-572283917804.us-central1.run.app:
+    get:
+      description: >-
+        Obtiene el listado de los visores creados por un usuario en base al email.
+      tags:
+        - Visor
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuario creado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  document_urls:
+                    type: array
+                    items:
                       type: string
-                      example: Usuario eliminado correctamente
-          '400':
-            description: 'Solicitud incorrecta, faltan parámetros obligatorios.'
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
+                    example: ["url1", "url2"]
+
+        '204':
+          description: El usuario aun no tiene graficos creados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: >-
+                      success
+                  message:
+                    type: string
+                    example: >-
+                      El email no tiene graficos creados
+                  document_urls:
+                    type: array
+                    items:
                       type: string
-                      example: El id del usuario actual es necesario
-          '401':
-            description: Error de autenticación.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/AuthError'
-                examples:
-                  missingToken:
-                    $ref: '#/components/examples/MissingToken'
-                  invalidToken:
-                    $ref: '#/components/examples/InvalidToken'
-          '403':
-            description: Permisos insuficientes para realizar la operación.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: Permisos insuficientes para eliminar este usuario
-          '404':
-            description: Usuario no encontrado.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: Usuario a eliminar no encontrado
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/InternalServerError'
-                examples:
-                  internalError:
-                    $ref: '#/components/examples/InternalServerError'
-    /datavizGetUsers:
-      get:
-        description: >-
-          Devuelve una lista de todos los usuarios registrados en la base de
-          datos. Solo los administradores tienen permiso para acceder a esta
-          información.
-        tags:
-          - Auth
-        security:
-          - bearerAuth: []
-        responses:
-          '200':
-            description: Lista de usuarios obtenida con éxito.
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        description: ID único del usuario.
-                        example: stgrga913-cc6a-4feb-a505-6a245a3099f1
-                      nombre:
-                        type: string
-                        description: Nombre del usuario.
-                        example: Juan
-                      apellido:
-                        type: string
-                        description: Apellido del usuario.
-                        example: Pérez
-                      correo:
-                        type: string
-                        description: Correo electrónico del usuario.
-                        example: juan.perez@example.com
-                      rol:
-                        type: integer
-                        description: Rol del usuario (1 para administrador).
-                        example: 2
-                      contraseña:
-                        type: integer
-                        description: contra del usuario
-                        example: '123456'
-          '400':
-            description: El ID del usuario administrador es requerido.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: El ID del usuario administrador es requerido
-          '401':
-            description: Error de autenticación.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/AuthError'
-                examples:
-                  missingToken:
-                    $ref: '#/components/examples/MissingToken'
-                  invalidToken:
-                    $ref: '#/components/examples/InvalidToken'
-          '404':
-            description: No se encontraron usuarios en la base de datos.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: No hay usuarios
-          '405':
-            description: Permisos insuficientes para acceder a los usuarios.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: No tienes permisos para acceder a los usuarios
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/InternalServerError'
-                examples:
-                  internalError:
-                    $ref: '#/components/examples/InternalServerError'
-    /datavizGetUser:
-      get:
-        description: >-
-          Recupera los datos de un usuario específico utilizando su ID. Solo los
-          administradores tienen acceso a esta información.
-        tags:
-          - Auth
-        security:
-          - bearerAuth: []
-        parameters:
-          - name: id
-            in: query
-            required: true
+                    example: []
+
+        '400':
+          description: Error en los datos proporcionados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El email es obligatorio
+        '401':
+          description: Error de autenticación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                missingToken:
+                  $ref: '#/components/examples/MissingToken'
+                invalidToken:
+                  $ref: '#/components/examples/InvalidToken'
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+              examples:
+                internalError:
+                  $ref: '#/components/examples/InternalServerError'
+  
+  /datavizUpdateUser:
+    post:
+      description: >-
+        Actualiza los datos de un usuario existente en la base de datos.
+        Requiere el correo del usuario como identificador obligatorio.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID del usuario que se desea actualizar.
+          example: 676tgd1-cc3456a-465fb-fds505-6a245a309e12
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: string
-            description: ID del usuario cuyo detalle se desea obtener.
-            example: 3b3f5114-6e55-4a5c-872f-e1ffa9b46061
-        responses:
-          '200':
-            description: Usuario encontrado y datos recuperados correctamente.
-            content:
-              application/json:
-                schema:
+              type: object
+              properties:
+                correo:
+                  type: string
+                  format: email
+                  example: juan.perez@example.com
+                  description: >-
+                    Correo del usuario que se desea actualizar.
+                    **Obligatorio**.
+                nombre:
+                  type: string
+                  example: Juan
+                  description: >-
+                    Nuevo nombre del usuario. Solo se actualiza si es
+                    diferente del actual.
+                apellido:
+                  type: string
+                  example: Pérez
+                  description: >-
+                    Nuevo apellido del usuario. Solo se actualiza si es
+                    diferente del actual.
+                password:
+                  type: string
+                  example: nueva_contraseña
+                  description: >-
+                    Nueva contraseña del usuario. Solo se actualiza si es
+                    diferente de la actual.
+      responses:
+        '200':
+          description: Usuario actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario actualizado correctamente
+        '400':
+          description: >-
+            Solicitud incorrecta. Por ejemplo, falta el correo o no hay
+            cambios en los datos del usuario.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example:
+                      missingCorreo:
+                        value: >-
+                          El correo del usuario que se desea editar es
+                          obligatorio
+                      noChanges:
+                        value: No se detectaron cambios en los datos del usuario
+        '401':
+          description: Error de autenticación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                missingToken:
+                  $ref: '#/components/examples/MissingToken'
+                invalidToken:
+                  $ref: '#/components/examples/InvalidToken'
+        '404':
+          description: Usuario no encontrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El usuario que intenta ser editado no existe
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+              examples:
+                internalError:
+                  $ref: '#/components/examples/InternalServerError'
+  /datavizDeleteUser:
+    delete:
+      description: >-
+        Solo los usuarios con rol de administrador pueden realizar esta
+        operación.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID del usuario que se desea eliminar.
+          example: 676tgd1-cc3456a-465fb-fds505-6a245a309e12
+      responses:
+        '200':
+          description: Usuario eliminado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario eliminado correctamente
+        '400':
+          description: 'Solicitud incorrecta, faltan parámetros obligatorios.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El id del usuario actual es necesario
+        '401':
+          description: Error de autenticación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                missingToken:
+                  $ref: '#/components/examples/MissingToken'
+                invalidToken:
+                  $ref: '#/components/examples/InvalidToken'
+        '403':
+          description: Permisos insuficientes para realizar la operación.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Permisos insuficientes para eliminar este usuario
+        '404':
+          description: Usuario no encontrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario a eliminar no encontrado
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+              examples:
+                internalError:
+                  $ref: '#/components/examples/InternalServerError'
+  /datavizGetUsers:
+    get:
+      description: >-
+        Devuelve una lista de todos los usuarios registrados en la base de
+        datos. Solo los administradores tienen permiso para acceder a esta
+        información.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de usuarios obtenida con éxito.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
                   type: object
                   properties:
                     id:
                       type: string
                       description: ID único del usuario.
-                      example: 3b3f5114-6e55-4a5c-872f-e1ffa9b46061
+                      example: stgrga913-cc6a-4feb-a505-6a245a3099f1
                     nombre:
                       type: string
                       description: Nombre del usuario.
@@ -601,99 +497,198 @@
                       type: integer
                       description: contra del usuario
                       example: '123456'
-          '400':
-            description: >-
-              El ID del usuario administrador o el ID del usuario no están
-              presentes en la solicitud.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: El ID del usuario administrador es requerido
-          '401':
-            description: Error de autenticación.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/AuthError'
-                examples:
-                  missingToken:
-                    $ref: '#/components/examples/MissingToken'
-                  invalidToken:
-                    $ref: '#/components/examples/InvalidToken'
-          '404':
-            description: No se encontró el usuario solicitado en la base de datos.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: Usuario no encontrado
-          '405':
-            description: >-
-              El usuario que realiza la solicitud no tiene permisos suficientes
-              para acceder a la información del usuario solicitado.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: No tienes permisos para acceder a los usuarios
-          '500':
-            description: Error interno del servidor.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/InternalServerError'
-                examples:
-                  internalError:
-                    $ref: '#/components/examples/InternalServerError'
-  components:
-    schemas:
-      AuthError:
-        type: object
-        properties:
-          success:
-            type: boolean
-          message:
+        '400':
+          description: El ID del usuario administrador es requerido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El ID del usuario administrador es requerido
+        '401':
+          description: Error de autenticación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                missingToken:
+                  $ref: '#/components/examples/MissingToken'
+                invalidToken:
+                  $ref: '#/components/examples/InvalidToken'
+        '404':
+          description: No se encontraron usuarios en la base de datos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No hay usuarios
+        '405':
+          description: Permisos insuficientes para acceder a los usuarios.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No tienes permisos para acceder a los usuarios
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+              examples:
+                internalError:
+                  $ref: '#/components/examples/InternalServerError'
+  /datavizGetUser:
+    get:
+      description: >-
+        Recupera los datos de un usuario específico utilizando su ID. Solo los
+        administradores tienen acceso a esta información.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
             type: string
-        required:
-          - success
-          - message
-      InternalServerError:
-        type: object
-        properties:
-          success:
-            type: boolean
-            example: false
-          error:
-            type: string
-            example: Error interno del servidor
-    examples:
-      MissingToken:
-        value:
-          success: false
-          message: Token de autorización faltante o inválido
-      InvalidToken:
-        value:
-          success: false
-          message: Token inválido
-      InternalServerError:
-        value:
-          success: false
-          error: >-
-            Se produjo un error interno en el servidor. Inténtalo de nuevo más
-            tarde.
-    securitySchemes:
-      bearerAuth:
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
+          description: ID del usuario cuyo detalle se desea obtener.
+          example: 3b3f5114-6e55-4a5c-872f-e1ffa9b46061
+      responses:
+        '200':
+          description: Usuario encontrado y datos recuperados correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID único del usuario.
+                    example: 3b3f5114-6e55-4a5c-872f-e1ffa9b46061
+                  nombre:
+                    type: string
+                    description: Nombre del usuario.
+                    example: Juan
+                  apellido:
+                    type: string
+                    description: Apellido del usuario.
+                    example: Pérez
+                  correo:
+                    type: string
+                    description: Correo electrónico del usuario.
+                    example: juan.perez@example.com
+                  rol:
+                    type: integer
+                    description: Rol del usuario (1 para administrador).
+                    example: 2
+                  contraseña:
+                    type: integer
+                    description: contra del usuario
+                    example: '123456'
+        '400':
+          description: >-
+            El ID del usuario administrador o el ID del usuario no están
+            presentes en la solicitud.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: El ID del usuario administrador es requerido
+        '401':
+          description: Error de autenticación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                missingToken:
+                  $ref: '#/components/examples/MissingToken'
+                invalidToken:
+                  $ref: '#/components/examples/InvalidToken'
+        '404':
+          description: No se encontró el usuario solicitado en la base de datos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario no encontrado
+        '405':
+          description: >-
+            El usuario que realiza la solicitud no tiene permisos suficientes
+            para acceder a la información del usuario solicitado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No tienes permisos para acceder a los usuarios
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+              examples:
+                internalError:
+                  $ref: '#/components/examples/InternalServerError'
+components:
+  schemas:
+    AuthError:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+    InternalServerError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Error interno del servidor
+  examples:
+    MissingToken:
+      value:
+        success: false
+        message: Token de autorización faltante o inválido
+    InvalidToken:
+      value:
+        success: false
+        message: Token inválido
+    InternalServerError:
+      value:
+        success: false
+        error: >-
+          Se produjo un error interno en el servidor. Inténtalo de nuevo más
+          tarde.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
