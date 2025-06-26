@@ -101,6 +101,10 @@ paths:
                   format: email
                   example: juan.perez@example.com
                   description: Correo electrónico del usuario a crear.
+                password:
+                  type: string
+                  example: password123
+                  description: Contraseña del usuario a crear.
                 rol:
                   type: integer
                   enum:
@@ -190,17 +194,28 @@ paths:
               examples:
                 internalError:
                   $ref: '#/components/examples/InternalServerError'
-  /https://datavizgeturlbyemail-572283917804.us-central1.run.app:
+  /:
     get:
-      description: >-
+      description: >
         Obtiene el listado de los visores creados por un usuario en base al email.
+        **IMPORTANTE:** Debes proporcionar el parámetro `email` en la consulta para obtener los visores asociados a ese usuario.
       tags:
         - Visor
       security:
         - bearerAuth: []
+      servers:
+        - url: https://datavizgeturlbyemail-572283917804.us-central1.run.app
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+          description: >
+            Correo electrónico del usuario cuyos visores deseas consultar. Este campo es obligatorio.
       responses:
         '200':
-          description: Usuario creado exitosamente.
+          description: Lista de visores obtenida exitosamente.
           content:
             application/json:
               schema:
@@ -214,7 +229,6 @@ paths:
                     items:
                       type: string
                     example: ["url1", "url2"]
-
         '204':
           description: El usuario aun no tiene graficos creados.
           content:
@@ -224,18 +238,15 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: >-
-                      success
+                    example: success
                   message:
                     type: string
-                    example: >-
-                      El email no tiene graficos creados
+                    example: El email no tiene graficos creados
                   document_urls:
                     type: array
                     items:
                       type: string
                     example: []
-
         '400':
           description: Error en los datos proporcionados.
           content:
