@@ -1,0 +1,924 @@
+openapi: 3.0.1
+info:
+  title: API Indisponibilidad
+  description: |
+    API para obtener una Indisponibilidad a nivel de estación base cada hora de parte de los PRSTM por medio del método POST.
+
+    **Se puede realizar el envio de 1 o más paquetes, siendo el máximo 20.000 paquetes, separados por el simbolo "|" como aparece en los ejemplos.**
+  version: 0.8.0
+  contact:
+    email: wilson@glocation.com.co
+servers:
+  - url: https://indicadores-dev.mintic.gov.co/
+    description: Servidor de Desarrollo
+paths:
+  /Indisponibilidad/{prstm}:
+    post:
+      summary: Envio de la Información de Indisponibilidad
+      description: |
+        El PRSTM deberá reportar con un retardo de máximo dos horas después de su detección los incidentes que afecten la disponibilidad de Estaciones base, lo cual podrá realizar cada hora el listado de incidentes creados, activos o reestablecidos en ese período de tiempo.
+        
+        **Se puede realizar el envio de 1 o más paquetes, siendo el máximo 20.000 paquetes, separados por el simbolo "|" como aparece en los ejemplos.**
+      parameters:
+        - name: prstm
+          in: path
+          required: true
+          description: Nombre del PRSTM que envia la solicitud
+          schema:
+            type : string
+            enum: [Claro, Movistar, Tigo, WOM]            
+      security:
+        - JSONWebToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+              - id
+              - Ticket
+              - EstacionBase
+              - EstadoEB
+              - InicioFalla
+              - FechaHoraReporte
+              - Tecnologia
+              - Municipio
+              - Departamento
+              - CodigoDANE
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 45534 ó 45534|43231|453453|543534
+                  description: Se crea con cada registro de forma consecutiva, se envia como string por paquetes, pero debe ser un integer
+                Ticket:
+                  type: string
+                  example: INC9412925 ó INC9412925|BOG342|MED2231|ACM3432|JUV34234
+                EstacionBase:
+                  type: string
+                  example: ANT0218 ó ANT0218|ANT0192|RIS4313|GUA3248|BOL0542
+                  description: "Es el Código de sitio tal cual se reporta en HECCA"
+                EstadoEB:
+                  type: string                  
+                  example: Indisponible ó Indisponible|Disponible|Disponible|Indisponible
+                  enum: ["Indisponible", "Disponible"]
+                InicioFalla:
+                  type: string
+                  format: date-time
+                  example: 2024-02-27 12:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+                FinFalla:
+                  type: string
+                  description: "Cuando no se ha recuperado el servicio este campo deberá dejarse en blanco. Cuando el PRSTM detecte que no se presentó afectación de servicio la información de este campo será igual a la del campo InicioFalla"
+                  format: date-time
+                  example: 2024-02-27 17:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+                FechaHoraReporte:
+                  type: string
+                  format: date-time
+                  example: 2024-02-27 18:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+                Tecnologia:
+                  type: string
+                  example: "2G ó 3G|5G|3G|4G"
+                  enum: ["2G", "3G", "4G", "5G"]
+                Municipio:
+                  type: string
+                  example: "Apulo ó Apulo|Tibacuy|Pasca|Villavicencio"
+                Departamento:
+                  type: string
+                  example: "Cundinamarca  ó Cundinamarca|Cundinamarca|Cundinamarca|Meta"
+                CodigoDANE:                  
+                  type: integer
+                  example: "25612  ó 25612|5001|25453|50001"
+                DeteccionFalla:
+                  type: string
+                  format: date-time
+                  example: 2024-02-27 18:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+      responses:      
+        '200':    # status code
+          description: Retorna "true" cuando se guardaron los campos correctamente
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: true
+        '400':
+          description: Algún campo quedo con el tipo incorrecto, por favor revisar si esta bien definidos cada uno de los campos
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: |
+                      El campo XXXX del paquete XXXX tiene el siguiente error: "XXXXX"
+        '401':
+          description: Alguna credencial es inválida o esta caducada, por favor comunicarse con el desarrollador para obtener unas nuevas credenciales
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Unauthorized (No autorizado)
+        '403':
+          description: El usuario no tiene permisos para realizar esta acción, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Forbidden (Prohibido)
+        '404':
+          description: El endpoint no fue encontrado, por favor revisar si esta bien escrita la URL.
+          content:
+            text:
+              schema: 
+                type: string
+                example: "Not Found (No encontrado)"
+        '405':
+          description: El usuario no tiene permitido realizar esta acción, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Method NOT Allowed (Método no permitido)
+        '502':
+          description: Ocurrio un error al procesar la información, por favor comunicarse con el desarrollador.
+          content:
+            text:
+              schema: 
+                type: string
+                example: Bad Gateway (Puerta de Enlace incorrecta)
+        '503':
+          description: El servicio no esta disponible, por mantenimiento, por favor comunicarse con el desarrollador.
+          content:
+            text:
+              schema: 
+                type: string
+                example: Service Unavailable (Servicio no disponible)
+    patch:
+      summary: Envio de la Información de Indisponibilidad
+      description: |
+        El PRSTM deberá reportar con un retardo de máximo dos horas después de su detección los incidentes que afecten la disponibilidad de Estaciones base, lo cual podrá realizar cada hora el listado de incidentes creados, activos o reestablecidos en ese período de tiempo.
+        
+        **Se puede realizar el envio de 1 o más paquetes, siendo el máximo 20.000 paquetes, separados por el simbolo "|" como aparece en los ejemplos.**
+      parameters:
+        - name: prstm
+          in: path
+          required: true
+          description: Nombre del PRSTM que envia la solicitud
+          schema:
+            type : string
+            enum: [Claro, Movistar, Tigo, WOM]            
+      security:
+        - JSONWebToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+              - id
+              - Ticket
+              - EstacionBase
+              - EstadoEB
+              - InicioFalla
+              - FinFalla
+              - FechaHoraReporte
+              - Tecnologia
+              - Municipio
+              - Departamento
+              - CodigoDANE
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 45534 ó 45534|43231|453453|543534
+                  description: Se crea con cada registro de forma consecutiva, se envia como string por paquetes, pero debe ser un integer
+                Ticket:
+                  type: string
+                  example: INC9412925 ó INC9412925|BOG342|MED2231|ACM3432|JUV34234
+                EstacionBase:
+                  type: string
+                  example: ANT0218 ó ANT0218|ANT0192|RIS4313|GUA3248|BOL0542
+                  description: "Es el Código de sitio tal cual se reporta en HECCA"
+                EstadoEB:
+                  type: string                  
+                  example: Indisponible ó Indisponible|Disponible|Disponible|Indisponible
+                  enum: ["Indisponible", "Disponible"]
+                InicioFalla:
+                  type: string
+                  format: date-time
+                  example: 2024-02-27 12:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+                FinFalla:
+                  type: string
+                  description: "Cuando no se ha recuperado el servicio este campo deberá dejarse en blanco. Cuando el PRSTM detecte que no se presentó afectación de servicio la información de este campo será igual a la del campo InicioFalla"
+                  format: date-time
+                  example: 2024-02-27 17:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+                FechaHoraReporte:
+                  type: string
+                  format: date-time
+                  example: 2024-02-27 18:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+                Tecnologia:
+                  type: string
+                  example: "2G ó 3G|5G|3G|4G"
+                  enum: ["2G", "3G", "4G", "5G"]
+                Municipio:
+                  type: string
+                  example: "Apulo ó Apulo|Tibacuy|Pasca|Villavicencio"
+                Departamento:
+                  type: string
+                  example: "Cundinamarca  ó Cundinamarca|Cundinamarca|Cundinamarca|Meta"
+                CodigoDANE:
+                  type: integer
+                  example: "25612  ó 25612|5001|25453|50001"
+                DeteccionFalla:
+                  type: string
+                  format: date-time
+                  example: 2024-02-27 18:00:00 ó 2024-02-30 16:30:00|2024-02-27 12:00:00|2024-06-06 08:33:00|2024-08-03 18:00:00
+      responses:      
+        '200':    # status code
+          description: Retorna "true" cuando se guardaron los campos correctamente
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: true
+        '400':
+          description: Algún campo quedo con el tipo incorrecto, por favor revisar si esta bien definidos cada uno de los campos
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: |
+                      El campo XXXX del paquete XXXX tiene el siguiente error: "XXXXX"
+        '401':
+          description: Alguna credencial es inválida o esta caducada, por favor comunicarse con el desarrollador para obtener unas nuevas credenciales
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Unauthorized (No autorizado)
+        '403':
+          description: El usuario no tiene permisos para realizar esta acción, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Forbidden (Prohibido)
+        '404':
+          description: El endpoint no fue encontrado, por favor revisar si esta bien escrita la URL.
+          content:
+            text:
+              schema: 
+                type: string
+                example: "Not Found (No encontrado)"
+        '405':
+          description: El usuario no tiene permitido realizar esta acción, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Method NOT Allowed (Método no permitido)
+        '502':
+          description: Ocurrio un error al procesar la información, por favor comunicarse con el desarrollador.
+          content:
+            text:
+              schema: 
+                type: string
+                example: Bad Gateway (Puerta de Enlace incorrecta)
+        '503':
+          description: El servicio no esta disponible, por mantenimiento, por favor comunicarse con el desarrollador.
+          content:
+            text:
+              schema: 
+                type: string
+                example: Service Unavailable (Servicio no disponible)
+  /accesstoken/token:
+    post:
+      summary: Endpoint de Autenticación para indisponibilidad
+      description: |
+        Para poder realizar el request al Endpoint de Indisponibilidad, es necesario realizar una autenticación previa OAuth 2.0, esta autenticación retornara un JWT que se enviará en el endpoint de Indisponibilidad. 
+
+        Para solicitar las credenciales, por medio de correo eléctronico al MinTIC
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  example: "client_credentials"                  
+                  description: Debe ir client_credentials
+              required:
+                - grant_type
+      responses:
+        '200':    # status code
+          description: Retorna "true" cuando se guardaron los campos correctamente
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: true
+        '400':
+          description: Algún campo quedo con el tipo incorrecto, por favor revisar si esta bien definidos cada uno de los campos
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: |
+                      El campo XXXX del paquete XXXX tiene el siguiente error: "XXXXX"
+        '401':
+          description: Alguna credencial es inválida o esta caducada, por favor comunicarse con el desarrollador para obtener unas nuevas credenciales
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Unauthorized (No autorizado)
+        '403':
+          description: El usuario no tiene permisos para realizar esta acción, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Forbidden (Prohibido)
+        '404':
+          description: El endpoint no fue encontrado, por favor revisar si esta bien escrita la URL.
+          content:
+            text:
+              schema: 
+                type: string
+                example: "Not Found (No encontrado)"
+        '405':
+          description: El usuario no tiene permitido realizar esta acción, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Method NOT Allowed (Método no permitido)
+        '500':
+          description: Ocurrio un error al procesar la información, por favor comunicarse con el desarrollador.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties: 
+                  fault:
+                    type: object
+                    properties: 
+                      faultstring:
+                        type: string
+                        example: "Missing required parameter: response_type or grant_type"
+                      detail:
+                        type: object
+                        properties: 
+                          errorcode:
+                            type: string
+                            example: "steps.oauth.v2.MissingParameter"
+        '502':
+          description: Ocurrio un error al procesar la información, por favor comunicarse con el desarrollador.
+          content:
+            text:
+              schema: 
+                type: string
+                example: Bad Gateway (Puerta de Enlace incorrecta)
+        '503':
+          description: El servicio no esta disponible, por mantenimiento, por favor comunicarse con el desarrollador.
+          content:
+            text:
+              schema: 
+                type: string
+                example: Service Unavailable (Servicio no disponible)    
+  /Validation/Indisponibilidad/{prstm}:
+    post:
+      summary: Validación de Indisponibilidad
+      description: |
+        Este endpoint permite a un PRSTM enviar un listado de incidentes relacionados con la indisponibilidad de estaciones base, los cuales deben reportarse con un máximo de dos horas de retardo desde su detección.
+
+        **Características:**
+        - El listado puede incluir incidentes creados, activos o restablecidos durante el período reportado.
+        - El envío debe realizarse en un arreglo de objetos JSON.
+        - Se permite un máximo de 20,000 paquetes por solicitud.
+
+        **Parámetros obligatorios:**
+        - Nombre del PRSTM que envía la solicitud.
+
+        **Restricciones:**
+        - El parámetro `prstm` debe coincidir con uno de los operadores permitidos: Claro, Movistar, Tigo, WOM.
+      parameters:
+        - name: prstm
+          in: path
+          required: true
+          description: Nombre del PRSTM (Proveedor de Servicio de Telecomunicaciones Móviles)
+          schema:
+            type: string
+            enum: [Claro, Movistar, Tigo, WOM]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              description: Arreglo de objetos que contiene los datos de los incidentes reportados
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Identificador único del incidente
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Fecha y hora del incidente en formato ISO 8601
+                  status:
+                    type: string
+                    description: Estado del incidente (e.g., creado, activo, restablecido)
+      responses:
+        '200':
+          description: Validación exitosa del reporte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    description: Indica si la validación fue exitosa
+                  message:
+                    type: string
+                    description: Mensaje de confirmación
+        '400':
+          description: Error en la validación del reporte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    description: Indica si la validación falló
+                  message:
+                    type: string
+                    description: Mensaje de error detallado            
+  /ControlData/Indisponibilidad/{prstm}:
+    get:
+      summary: Conteo de Datos para Indisponibilidad
+      description: |
+        Este endpoint realiza el conteo de registros relacionados con incidentes de indisponibilidad para un PRSTM específico. 
+        Los datos incluyen el número total de envíos, registros, envíos exitosos y con errores, agrupados por el PRSTM proporcionado.
+
+        **Nota:**
+        - Se puede filtrar por el identificador único de un envío (`id`) o por una fecha específica (`date`).
+        - En caso de no proporcionar filtros, se devolverá el conteo global para el PRSTM indicado.
+      parameters:
+        - name: prstm
+          in: path
+          required: true
+          description: Nombre del PRSTM (Proveedor de Servicio de Telecomunicaciones Móviles)
+          schema:
+            type: string
+            enum: [Claro, Movistar, Tigo, WOM]
+        - name: id
+          in: query
+          required: false
+          description: Identificador único del envío a consultar
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          description: Fecha específica a consultar en formato YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Respuesta exitosa con el conteo de registros
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    description: Indica si la operación fue exitosa
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        numero_envios:
+                          type: integer
+                          description: Número total de envíos procesados
+                        numero_registros:
+                          type: integer
+                          description: Número total de registros enviados
+                        exitosos:
+                          type: integer
+                          description: Número de registros enviados exitosamente
+                        errores:
+                          type: integer
+                          description: Número de registros enviados con errores
+        '400':
+          description: Ocurrió un error al obtener los datos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    description: Indica si la operación falló
+                  message:
+                    type: string
+                    description: Mensaje de error detallado
+  /Indisponbilidad/Coordenadas/{prstm}:
+    post:
+      summary: Reporte de coordenadas de estaciones base indisponibles
+      description: |
+        Este endpoint permite a un PRSTM enviar un listado de coordenadas geográficas relacionadas con la ubicación de las estaciones base afectadas por incidentes de indisponibilidad. 
+        Los datos deben reportarse con un máximo de dos horas de retardo desde su detección.
+
+        **Características:**
+        - El listado puede incluir coordenadas geográficas de estaciones base afectadas.
+        - El envío debe realizarse en un arreglo de objetos JSON.
+
+        **Parámetros obligatorios:**
+        - Nombre del PRSTM que envía la solicitud (Claro, Movistar, Tigo, WOM).
+
+        **Restricciones:**
+        - El parámetro `prstm` debe coincidir con uno de los operadores permitidos: Claro, Movistar, Tigo, WOM.
+      parameters:
+        - in: path
+          name: prstm
+          required: true
+          description: Nombre del operador (Claro, Movistar, Tigo, WOM).
+          schema:
+            type: string
+            enum: [Claro, Movistar, Tigo, WOM]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - Estado
+                  - Fecha_Creacion
+                  - Fecha_Finalizacion
+                  - Estacion_Base
+                  - Cod_DANE
+                  - Latitud
+                  - Longitud
+                properties:
+                  Estado:
+                    type: string
+                    example: "Indisponible"
+                  Fecha_Creacion:
+                    type: string
+                    format: date-time
+                    example: "2025-07-10T12:00:00Z"
+                  Fecha_Finalizacion:
+                    type: string
+                    format: date-time
+                    example: "2025-07-10T14:00:00Z"
+                  Estacion_Base:
+                    type: string
+                    example: "EB1234"
+                  Cod_DANE:
+                    type: string
+                    example: "11001000"
+                  Latitud:
+                    type: number
+                    format: float
+                    example: 4.60971
+                  Longitud:
+                    type: number
+                    format: float
+                    example: -74.08175
+      responses:
+        '200':
+          description: Datos almacenados exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Se almacenaron correctamente 3 registros de Claro"
+        '400':
+          description: Error de validación en los datos enviados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Se encontraron errores en algunos paquetes"
+                  errores:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                          example: 1
+                        mensaje:
+                          type: string
+                          example: "Faltan campos en el paquete #2"
+                        campos_faltantes:
+                          type: array
+                          items:
+                            type: string
+                            example: "Latitud"
+        '405':
+          description: Método no permitido
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Método no permitido. Usa POST."
+        '500':
+          description: Error al insertar datos en BigQuery
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Error al insertar datos en BigQuery"
+                  error:
+                    type: string
+                    example: "Table not found"
+  /Indisponibilidad/Afectaciones/{prstm}:
+    post:
+      summary: Reporte de afectaciones de estaciones base por operador
+      description: |
+        Este endpoint permite a un PRSTM (operador) enviar un listado de registros sobre afectaciones en estaciones base.
+
+        **Requisitos:**
+        - El cuerpo de la solicitud debe ser un arreglo de objetos JSON con los campos requeridos.
+        - Todos los campos deben tener el tipo y formato correcto.
+        - El campo `Codigo_DANE` debe ser válido de acuerdo con la lista predefinida.
+      
+        **Parámetros obligatorios:**
+        - Nombre del PRSTM que envía la solicitud (Claro, Movistar, Tigo, WOM).
+
+        **Formato de fecha esperado:** `YYYY-MM-DD HH:mm:ss`
+
+      parameters:
+        - in: path
+          name: prstm
+          required: true
+          description: Nombre del operador (Claro, Movistar, Tigo, WOM).
+          schema:
+            type: string
+            enum: [Claro, Movistar, Tigo, WOM]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - Inicio_Afectacion
+                  - Fin_Afectacion
+                  - Fecha_Hora_Reporte
+                  - Codigo_DANE
+                  - Deteccion_Afectacion
+                  - Exencion
+                  - Clasificacion_Exencion
+                  - Tipificacion_Exencion
+                  - Descripcion_Exencion
+                  - Fecha_Presentacion_Plan
+                  - Codigo_Plan_Mejora
+                  - Categoria_Plan_Mejora
+                  - Ticket
+                  - Accion_Plan_Mejora
+                  - Descripcion_Plan_Mejora
+                  - Fecha_Fin_Real
+                  - Evidencias
+                properties:
+                  Inicio_Afectacion:
+                    type: string
+                    format: date-time
+                    example: "2025-07-10 10:00:00"
+                  Fin_Afectacion:
+                    type: string
+                    format: date-time
+                    example: "2025-07-10 12:00:00"
+                  Fecha_Hora_Reporte:
+                    type: string
+                    format: date-time
+                    example: "2025-07-10 12:30:00"
+                  Codigo_DANE:
+                    type: number
+                    example: 11001000
+                  Deteccion_Afectacion:
+                    type: string
+                    example: "Fallo eléctrico"
+                  Exencion:
+                    type: string
+                    example: "Justificada"
+                  Clasificacion_Exencion:
+                    type: number
+                    example: 1
+                  Tipificacion_Exencion:
+                    type: number
+                    example: 2
+                  Descripcion_Exencion:
+                    type: string
+                    example: "Incidente por corte de energía"
+                  Fecha_Presentacion_Plan:
+                    type: string
+                    format: date-time
+                    example: "2025-07-11 08:00:00"
+                  Codigo_Plan_Mejora:
+                    type: string
+                    example: "PM123456"
+                  Categoria_Plan_Mejora:
+                    type: number
+                    example: 1
+                  Ticket:
+                    type: string
+                    example: "TK98765"
+                  Accion_Plan_Mejora:
+                    type: number
+                    example: 3
+                  Descripcion_Plan_Mejora:
+                    type: string
+                    example: "Cambio de transformador"
+                  Fecha_Fin_Real:
+                    type: string
+                    format: date-time
+                    example: "2025-07-12 10:00:00"
+                  Evidencias:
+                    type: string
+                    example: "https://drive.google.com/file/afectacion1"
+      responses:
+        '201':
+          description: Registros almacenados exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Se almacenaron correctamente 2 registros"
+                  id_afectaciones:
+                    type: array
+                    items:
+                      type: string
+                      example: "4d92-4a85-b0f9-9d2f"
+        '400':
+          description: Error de validación en uno o más registros
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Errores de validación en uno o más registros"
+                  errores:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                          example: 0
+                        mensaje:
+                          type: string
+                          example: "Errores en el registro #1"
+                        campos_faltantes:
+                          type: array
+                          items:
+                            type: string
+                            example: "Codigo_Plan_Mejora"
+                        errores_tipo:
+                          type: array
+                          items:
+                            type: string
+                            example: "Codigo_DANE debe ser número"
+        '405':
+          description: Método no permitido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Método no permitido. Usa POST."
+        '500':
+          description: Error interno o al insertar en BigQuery
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Error al insertar datos en BigQuery"
+                  error:
+                    type: string
+                    example: "Table not found"
+
+components:
+  securitySchemes:
+    JSONWebToken:
+      type: http
+      description: Para ejecutar el API es necesario un JWT Token, se debe solicitar desde el endpoint de Autenticacion
+      bearerFormat: JWT
+      scheme: bearer
+    basicAuth: # <-- arbitrary name for the security scheme
+      type: http
+      scheme: basic

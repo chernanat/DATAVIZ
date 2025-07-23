@@ -19,9 +19,21 @@ servers:
 paths:
   /datavizCreateGraphic:
     post:
-      description: >-
-        Crea un gráfico en la base de datos Firestore para visualizar su
-        gráfico, tabla y mapa si se desea y cuenta con los datos.
+      summary: Crear un gráfico
+      description: |
+        Crea un gráfico en la base de datos Firestore para visualizar su gráfico, tabla y mapa si se desea y cuenta con los datos.
+
+        **IMPORTANTE:**  
+        El request body varía según el tipo de gráfico.  
+        Selecciona el ejemplo correspondiente para ver cómo debe estructurarse la petición.
+
+        **Instrucciones generales:**
+        - El campo `token` es obligatorio y se obtiene desde el administrador.
+        - El campo `tipo` puede ser: barras verticales, barras horizontales, pie, dona, linea, area, barras apiladas, treemap, tarjeta, gauge, calendario, radar.
+        - Los campos `propiedades` y `propiedadesMapa` pueden variar según el tipo de gráfico.
+        - Si usas mapas, asegúrate de incluir los campos requeridos en `propiedadesMapa`.
+
+        Consulta los ejemplos para cada tipo de gráfico.
       tags:
         - Graphics
       requestBody:
@@ -29,295 +41,347 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - titulo
-                - tipo
-                - descripcion
-                - token
-              properties:
-                token:
-                  type: string
-                  description: >-
-                    Token de autorizacion facilitado por el super
-                    Administrador.
-                  example: bca649f805f1c7475ds2d89c4e140d7c
-                titulo:
-                  type: string
-                  description: Título del gráfico (debe ser único).
-                  example: Caídas de red por tecnología
-                descripcion:
-                  type: string
-                  description: Descripción del gráfico.
-                  example: >-
-                    Aca se puede visualizar las caídas a lo largo del tiempo
-                    de las diferentes estaciones en sus respectivas
-                    tecnologías.
-                tipo:
-                  type: string
-                  description: >
-                    Tipo de gráfico. 
-
-
-                    Los gráficos "barras verticales", "barras horizontales",
-                    "pie", "dona", "treemap", "tarjeta", "linea", "area" y
-                    "gauge" solo necesitan una dimensión y una medición. 
-
-
-                    Los demás requieren "dimension" (eje X) y "dimension2"
-                    (categorías).
-
-
-                    Los gráficos de línea y area pueden tener dos (2)
-                    dimensiones
-
-
-                    El gráfico de calendario necesita que su "dimension" (eje
-                    x) sean fechas para funcionar.
-                  enum:
-                    - barras verticales
-                    - barras horizontales
-                    - pie
-                    - dona
-                    - linea
-                    - area
-                    - barras apiladas
-                    - treemap
-                    - tarjeta
-                    - gauge
-                    - calendario
-                    - de velas
-                    - radar
-                logo:
-                  type: string
-                  description: Url del logo de la empresa o del cliente.
-                  example: >-
-                    https://upload.wikimedia.org/wikipedia/commons/f/f1/Samsung_logo_blue.png
-                tipoAgregacion:
-                  type: string
-                  description: >-
-                    Se refiere a qué operación matemática, se desea realizar
-                    con el valor de medición para mostrar en el gráfico, ya
-                    sea una suma o el promedio de los datos por categoría.
-                  enum:
-                    - suma
-                    - promedio
-                filtrosActivos:
-                  type: boolean
-                  description: >-
-                    Hace referencia a si se desea tener los filtros activos o
-                    desactivados para el gráfico, mapa y tabla.
-                  enum:
-                    - true
-                    - false
-                filtros:
-                  type: array
-                  items:
-                    type: string
-                  description: >-
-                    Si se desea filtrar por alguna propiedad, debe estar
-                    escrito igual que en los datos.
-                  example:
-                    - Tecnología
-                filtrosLabel:
-                  type: array
-                  items:
-                    type: string
-                  description: >-
-                    Etiquetas o nombres de los filtros, deben tener el mismo
-                    numero de filtros que se hayan agregado.
-                  example:
-                    - Tecnologías
-                propiedades:
-                  type: object
-                  description: Propiedades adicionales del gráfico y estilos.
-                  required:
-                    - dimension
-                    - medicion
-                    - urlData
-                  properties:
-                    urlData:
-                      type: string
-                      description: URL de los datos.
-                      example: >-
-                        https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-4
-                    dimension:
-                      type: string
-                      description: >-
-                        Dimensión o eje X del gráfico, debe ser una propiedad
-                        cualitativa, si es para gráficos de 2 dimensiones
-                        puede ser una dimension que contenga fechas (nombre
-                        exacto de la propiedad en los datos).
-                      example: fecha
-                    medicion:
-                      type: string
-                      description: >-
-                        la medición o eje y del gráfico, debe ser una
-                        propiedad cuantitativa, ya que con esta medición se
-                        sacara el promedio o suma para la creación del gráfico
-                        (nombre exacto de la propiedad en los datos).
-                      example: Conteo
-                    dimension2:
-                      type: string
-                      description: >-
-                        Dimensión 2 o categoría para gráficos específicos,
-                        debe ser una propiedad cualitativa (ej. barras
-                        apiladas, área, etc.).
-                      example: Tecnologia
-                    legend:
-                      type: boolean
-                      description: >-
-                        Hace referencia a si se quiere tener activas las
-                        leyendas en los gráficos.
-                      enum:
-                        - true
-                        - false
-                    legendPosition:
-                      type: string
-                      description: >-
-                        Hace referencia a la posicion de las leyendas si estan
-                        activas en el gráfico.
-                      enum:
-                        - top
-                        - bottom
-                        - left
-                        - right
-                    dataLabels:
-                      type: boolean
-                      description: >-
-                        Hace referencia a si se desean visualizar encima del
-                        gráfico los datos numericos.
-                      enum:
-                        - true
-                        - false
-                    compartible:
-                      type: boolean
-                      description: Indica si el gráfico es compartible.
-                      enum:
-                        - true
-                        - false
-                    descargable:
-                      type: boolean
-                      description: Indica si el gráfico es descargable.
-                      enum:
-                        - true
-                        - false
+              $ref: '#/components/schemas/CreateGraphicRequest'
+            examples:
+              barras_verticales:
+                summary: Gráfico de barras verticales
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Vertical_iso"
+                  descripcion: "Ejemplo de barras verticales"
+                  tipo: "barras verticales"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_brasil.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "bottom"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
                     estilo:
-                      type: object
-                      description: Estilo del gráfico.
-                      properties:
-                        color_fuente:
-                          type: string
-                          description: Color del texto en la página.
-                          default: 'rgba(54, 162, 235, 1)'
-                        colors:
-                          type: array
-                          description: >-
-                            Colores del gráfico, es importante que se pasen
-                            los colores necesarios para cada categoria que
-                            este en la dimension.
-                          example:
-                            - '#ffd60a'
-                            - '#0096c7'
-                            - '#a7c957'
-                            - '#ff6b35'
-                            - '#8338ec'
-                            - '#ff6b35'
-                        fuente:
-                          type: string
-                          description: Tipo de fuente del texto.
-                          default: Arial
-                          example: 'Arial, times new roman, tormenta, georgia'
-                    label_dimension:
-                      type: string
-                      description: Etiqueta de la dimensión.
-                      example: Tecnologias
-                    label_medicion:
-                      type: string
-                      description: Etiqueta de la medición.
-                      example: total
-                    dimensionSelected:
-                      type: string
-                      description: >-
-                        si el gráfico es tipo gauge, debes escoger una
-                        categoría específica de tu dimensión para calcular su
-                        valor en relación al total de la dimensión.
-                      example: 4g
-                propiedadesMapa:
-                  type: object
-                  description: >-
-                    Propiedades específicas para la creación del mapa, ya sea
-                    coropleta o de burbujas, también se agregara nivel de zoom
-                    inicial, latitud inicial y longitud inicial donde se
-                    iniciara la vista del mapa.
-                  properties:
-                    mapa:
-                      type: boolean
-                      default: false
-                      description: Indica si se desea generar un mapa.
-                      enum:
-                        - true
-                        - false
-                    tipo_mapa:
-                      type: string
-                      description: >-
-                        Tipo de mapa. Si es de coropleta requiere `id_geo` y
-                        urlMapa. Si es de burbujas requiere `lat`, `lon`, y
-                        `size`.
-                      enum:
-                        - coropleta
-                        - burbujas
-                    urlMapa:
-                      type: string
-                      description: URL del mapa. Requerida si tipo_mapa es 1.
-                      example: >-
-                        https://storage.googleapis.com/images-server-dataviz/mpios.json
-                    id_geo:
-                      type: string
-                      description: >-
-                        Identificador geográfico asociado al mapa que esta en
-                        urlData.
-                      example: municipios
-                    keyGeo:
-                      type: string
-                      description: >-
-                        Identificador geográfico asociado al mapa que esta en
-                        urlMapa.
-                      example: mpio_cdpmp
-                    lat:
-                      type: string
-                      description: >-
-                        Latitud para mapas de burbujas (nombre exacto en los
-                        datos).
-                      example: LATITUD
-                    lon:
-                      type: string
-                      description: >-
-                        Longitud para mapas de burbujas (nombre exacto en los
-                        datos).
-                      example: LONGITUD
-                    size:
-                      type: string
-                      description: >-
-                        Tamaño para mapas de burbujas (nombre exacto en los
-                        datos).
-                      example: Total
-                    latitudInicial:
-                      type: number
-                      description: >-
-                        Latitud inicial de la vista con la que se verá el
-                        mapa.
-                      example: 4.60971
-                    longitudInicial:
-                      type: number
-                      description: >-
-                        Longitud inicial de la vista con la que se verá el
-                        mapa.
-                      example: -74.08175
-                    zoom:
-                      type: number
-                      description: Nivel de zoom inicial del mapa.
-                      example: 8
+                      color_fuente: "rgba(255, 255, 255, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
+                  propiedadesMapa:
+                    mapa: true
+                    tipo_mapa: "coropleta"
+                    urlMapa: "https://storage.googleapis.com/images-server-dataviz/municipios.json"
+                    id_geo: "CodigoDANE"
+                    keyGeo: "MPIO_CCNCT"
+                    zoom: 8
+              barras_horizontales:
+                summary: Gráfico de barras horizontales
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Horizontal_iso"
+                  descripcion: "Ejemplo de barras horizontales"
+                  tipo: "barras horizontales"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_salvador.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB", "Tecnologia"]
+                  filtrosLabel: ["Estado", "Tecnología"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Tecnologia"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "right"
+                    dataLabels: true
+                    compartible: false
+                    descargable: false
+                    estilo:
+                      color_fuente: "rgba(0, 0, 255, 0.5)"
+                      colors: []
+                      fuente: "Tormenta"
+                    label_dimension: "Tecnología"
+                    label_medicion: "Total"
+                  propiedadesMapa:
+                    mapa: true
+                    tipo_mapa: "coropleta"
+                    urlMapa: "https://storage.googleapis.com/images-server-dataviz/municipios.json"
+                    id_geo: "CodigoDANE"
+                    keyGeo: "MPIO_CCNCT"
+                    zoom: 12
+              pie:
+                summary: Gráfico tipo pie
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Pie_iso"
+                  descripcion: "Ejemplo de gráfico pie"
+                  tipo: "pie"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_mexico.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "top"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(255, 255, 255, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
+              dona:
+                summary: Gráfico tipo dona
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Dona_iso"
+                  descripcion: "Ejemplo de gráfico dona"
+                  tipo: "dona"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_colombia.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "top"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(255, 255, 255, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
+              linea:
+                summary: Gráfico de línea
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Linea_iso"
+                  descripcion: "Ejemplo de gráfico de línea"
+                  tipo: "linea"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_argentina.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Fecha"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "bottom"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Fechas"
+                    label_medicion: "Total"
+              area:
+                summary: Gráfico de área
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Area_iso"
+                  descripcion: "Ejemplo de gráfico de área"
+                  tipo: "area"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_peru.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Fecha"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "bottom"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Fechas"
+                    label_medicion: "Total"
+              barras_apiladas:
+                summary: Gráfico de barras apiladas
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "BarrasApiladas_iso"
+                  descripcion: "Ejemplo de barras apiladas"
+                  tipo: "barras apiladas"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_chile.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB", "Categoria"]
+                  filtrosLabel: ["Estado", "Categoría"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Categoria"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "bottom"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Categoría"
+                    label_medicion: "Total"
+              treemap:
+                summary: Gráfico tipo treemap
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Treemap_iso"
+                  descripcion: "Ejemplo de gráfico treemap"
+                  tipo: "treemap"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_uruguay.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "bottom"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
+              tarjeta:
+                summary: Gráfico tipo tarjeta
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Tarjeta_iso"
+                  descripcion: "Ejemplo de gráfico tarjeta"
+                  tipo: "tarjeta"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_ecuador.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: false
+                  filtros: []
+                  filtrosLabel: []
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    medicion: "Total"
+                    legend: false
+                    legendPosition: "bottom"
+                    dataLabels: false
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
+              gauge:
+                summary: Gráfico tipo gauge
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Gauge_iso"
+                  descripcion: "Ejemplo de gráfico gauge"
+                  tipo: "gauge"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_bolivia.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: false
+                  filtros: []
+                  filtrosLabel: []
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    dimensionSelected: "La Paz"
+                    medicion: "Total"
+                    legend: false
+                    legendPosition: "bottom"
+                    dataLabels: false
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
+              calendario:
+                summary: Gráfico tipo calendario (dimension debe ser fecha)
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Calendario_iso"
+                  descripcion: "Ejemplo de gráfico calendario"
+                  tipo: "calendario"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_paraguay.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: false
+                  filtros: []
+                  filtrosLabel: []
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Fecha"
+                    medicion: "Total"
+                    legend: false
+                    legendPosition: "bottom"
+                    dataLabels: false
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Fechas"
+                    label_medicion: "Total"
+              radar:
+                summary: Gráfico tipo radar
+                value:
+                  token: "TOKEN_DE_EJEMPLO"
+                  titulo: "Radar_iso"
+                  descripcion: "Ejemplo de gráfico radar"
+                  tipo: "radar"
+                  logo: "https://storage.googleapis.com/test_example_all/bandera_venezuela.png"
+                  tipoAgregacion: "suma"
+                  filtrosActivos: true
+                  filtros: ["EstadoEB"]
+                  filtrosLabel: ["Estado"]
+                  propiedades:
+                    urlData: "https://us-east1-mintic-indicadores-calidad-prd.cloudfunctions.net/exampleData-1"
+                    dimension: "Departamento"
+                    medicion: "Total"
+                    legend: true
+                    legendPosition: "bottom"
+                    dataLabels: true
+                    compartible: true
+                    descargable: true
+                    estilo:
+                      color_fuente: "rgba(0, 0, 0, 0.5)"
+                      colors: []
+                      fuente: "Arial"
+                    label_dimension: "Depts"
+                    label_medicion: "Total"
       responses:
         '200':
           description: Gráfico creado correctamente.
@@ -342,8 +406,7 @@ paths:
                   message:
                     type: string
                     example: >-
-                      Los siguientes campos son requeridos: titulo,
-                      descripci
+                      Los siguientes campos son requeridos: titulo, descripcion, tipo
         '401':
           description: Error de autenticación.
           content:
@@ -978,6 +1041,38 @@ components:
         error:
           type: string
           example: Error interno del servidor
+    CreateGraphicRequest:
+      type: object
+      properties:
+        token:
+          type: string
+        titulo:
+          type: string
+        descripcion:
+          type: string
+        tipo:
+          type: string
+        logo:
+          type: string
+        tipoAgregacion:
+          type: string
+        filtrosActivos:
+          type: boolean
+        filtros:
+          type: array
+          items:
+            type: string
+        filtrosLabel:
+          type: array
+          items:
+            type: string
+        propiedades:
+          type: object
+        propiedadesMapa:
+          type: object
+      required:
+        - token
+        - tipo
   examples:
     MissingToken:
       value:
